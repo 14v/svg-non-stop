@@ -54,8 +54,8 @@ object NonStop {
             val targetGradients = targetGradientsMapEntry.value
             logv("Inserting stops for id $targetGradientId, ${targetGradients.count()} gradient(s) count")
             targetGradients.forEach { targetGradient ->
-                stops.forEach { stop ->
-                    logv("Inserting stop ${stop.getId()} for target gradient ${targetGradient.getId()}")
+                stops.forEachIndexed { stopNum, stop ->
+                    logv("Inserting stop #$stopNum for target gradient ${targetGradient.getId()}")
                     // appendChild will move node if attached to document already, cloning then
                     targetGradient.appendChild(stop.cloneNode(false))
                 }
