@@ -12,11 +12,11 @@ object NonStop {
 
     var optionVerbose = false
 
-    fun processSvg(rootNodes: NodeList) {
+    fun processSvg(rootNodes: NodeList): Boolean {
         val defsNode = rootNodes.findNode("defs")
         if (defsNode == null) {
-            println("No 'defs' node found, possibly this file does not contain gradients, exiting.")
-            return
+            println("No 'defs' node found, possibly this file does not contain gradients.")
+            return false
         }
 
         val gradientNodes = defsNode.childNodes
@@ -35,16 +35,29 @@ object NonStop {
                 if (targetGradientsMap[xlinkedId] == null) targetGradientsMap[xlinkedId] = mutableListOf()
                 targetGradientsMap[xlinkedId]!!.add(it)
                 logv("Found linked gradient, id $xlinkedId")
-            } else if (it.nodeName == "linearGradient") {
-                // Linear gradients with <stop> tags
-                val stopNodes = mutableListOf<Node>()
-                it.childNodes.forEach { stopNode -> if (stopNode.nodeName == "stop") stopNodes.add(stopNode) }
-                if (stopNodes.isEmpty()) return@forEach
-
-                val id = it.getId()
-                logv("Found linear gradient with stops, id $id")
-                gradientStopsMap[id] = stopNodes
+            } else if (it.isGradient()) {
+                extractStops(it, gradientStopsMap)
             }
+        }
+
+        if (gradientStopsMap.isEmpty()) {
+            println("Gradient stops not found in defs, searching in g(roups)...")
+            val gNode = rootNodes.findNode("g")
+            if (gNode == null) {
+                println("No 'g' nodes - stops not found.")
+                return false
+            }
+
+            logv("Found 'g' node...")
+            gNode.childNodes.forEachSearchGradients {
+                extractStops(it, gradientStopsMap)
+            }
+
+        }
+
+        if (gradientStopsMap.isEmpty()) {
+            println("Gradient stops not found in gs.")
+            return false
         }
 
         println("Inserting stops into target gradients.")
@@ -61,10 +74,40 @@ object NonStop {
                 }
             }
         }
+
+        return true
+    }
+
+    /**
+     * Process linear gradients with <stop> tags
+     */
+    private fun extractStops(linearGradient: Node, gradientStopsMap: MutableMap<String, List<Node>>) {
+        val stopNodes = mutableListOf<Node>()
+        linearGradient.childNodes.forEach { stopNode -> if (stopNode.nodeName == "stop") stopNodes.add(stopNode) }
+        val id = linearGradient.getId()
+        logv("Found linear gradient, id $id, has ${stopNodes.count()} stops")
+
+        if (stopNodes.isEmpty()) return
+        gradientStopsMap[id] = stopNodes
     }
 
     private fun NodeList.forEach(action: (Node) -> Unit) {
         for (i in 0 until this.length) action.invoke(this.item(i))
+    }
+
+    // Dumb recursive, may need performance update on big files
+    private fun NodeList.forEachSearchGradients(action: (Node) -> Unit) {
+        for (i in 0 until this.length) {
+            val node = this.item(i)
+            val childNodes = node.childNodes
+
+            if (childNodes.length > 0 && !node.isGradient()) {
+                logv("Node contains nested groups, g id " + node.getId())
+                childNodes.forEachSearchGradients(action)
+            } else if (node.isGradient()) {
+                action.invoke(node)
+            }
+        }
     }
 
     private fun NodeList.findNode(name: String): Node? {
@@ -88,6 +131,8 @@ object NonStop {
     private fun Node.getAttribute(attrName: String): String? {
         return this.attributes.getNamedItem(attrName)?.nodeValue
     }
+
+    private fun Node.isGradient(): Boolean = nodeName == "linearGradient"
 
     private fun logv(message: String) {
         if (optionVerbose) println(message)
@@ -132,7 +177,12 @@ fun main(args: Array<String>) {
     val nodes = document.documentElement.childNodes
     println("Document contains ${nodes.length} nodes.")
 
-    NonStop.processSvg(nodes)
+    val resultOk = NonStop.processSvg(nodes)
+
+    if (!resultOk) {
+        println("Errors occurred, exiting.")
+        return
+    }
 
     println("Processed document.")
     val domSource = DOMSource(document)
