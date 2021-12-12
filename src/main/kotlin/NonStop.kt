@@ -132,7 +132,7 @@ object NonStop {
         return this.attributes.getNamedItem(attrName)?.nodeValue
     }
 
-    private fun Node.isGradient(): Boolean = nodeName == "linearGradient"
+    private fun Node.isGradient(): Boolean = nodeName == "linearGradient" || nodeName == "radialGradient"
 
     private fun logv(message: String) {
         if (optionVerbose) println(message)
