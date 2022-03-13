@@ -8,10 +8,22 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
+/**
+ * Utility for repairing SVG for compatibility with Android build tools vector drawable
+ * conversion.
+ */
 object NonStop {
 
+    /**
+     * Whether to log verbosely when processing.
+     */
     var optionVerbose = false
 
+    /**
+     * Modifies the given XML [rootNodes] to repair missing stop info so the SVG can be
+     * converted to an Android vector asset by the Android build tools.
+     * @return whether any changes were made.
+     */
     fun processSvg(rootNodes: NodeList): Boolean {
         val defsNode = rootNodes.findNode("defs")
         if (defsNode == null) {
