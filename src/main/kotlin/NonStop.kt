@@ -1,4 +1,4 @@
-package com.github.fourteenv
+package io.github.fourteenv
 
 import org.w3c.dom.NamedNodeMap
 import org.w3c.dom.Node

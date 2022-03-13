@@ -5,11 +5,11 @@ plugins {
     `maven-publish`
 }
 
-group = "com.github.14v"
+group = "io.github.14v"
 version = "1.1.2"
 
 application {
-    mainClass.set("com.github.fourteenv.NonStopKt")
+    mainClass.set("io.github.fourteenv.NonStopKt")
 }
 
 repositories {
