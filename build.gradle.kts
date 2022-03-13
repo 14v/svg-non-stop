@@ -9,7 +9,7 @@ group = "com.github.14v"
 version = "1.1.2"
 
 application {
-    mainClass.set("NonStopKt")
+    mainClass.set("com.github.fourteenv.NonStopKt")
 }
 
 repositories {

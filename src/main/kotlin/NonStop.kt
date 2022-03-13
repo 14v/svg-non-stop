@@ -1,3 +1,5 @@
+package com.github.fourteenv
+
 import org.w3c.dom.NamedNodeMap
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
@@ -17,6 +19,7 @@ object NonStop {
     /**
      * Whether to log verbosely when processing.
      */
+    @JvmStatic
     var optionVerbose = false
 
     /**
@@ -24,6 +27,7 @@ object NonStop {
      * converted to an Android vector asset by the Android build tools.
      * @return whether any changes were made.
      */
+    @JvmStatic
     fun processSvg(rootNodes: NodeList): Boolean {
         val defsNode = rootNodes.findNode("defs")
         if (defsNode == null) {
